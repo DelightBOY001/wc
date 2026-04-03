@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — Wondercraft</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f0f4ff; --surface: #ffffff; --border: #dde3f5; --accent: #1877f2; --green: #00c853; --red: #f44336; --text: #0d1b3e; --muted: #8892b0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Sora', sans-serif; padding: 40px 20px; margin: 0; }
+  .container { max-width: 1000px; margin: 0 auto; }
+  .header { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 20px 30px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 30px; }
+  .header h1 { margin: 0; font-size: 24px; font-weight: 800; }
+  .btn-refresh { background: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: 'Sora'; transition: 0.2s; }
+  .btn-refresh:hover { opacity: 0.8; }
+  
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; position: relative; }
+  .card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--border); }
+  .card.SELECTED::before { background: var(--green); }
+  .card.REJECTED::before { background: var(--red); }
+  
+  .badge { position: absolute; top: 20px; right: 20px; font-size: 10px; font-family: 'JetBrains Mono'; font-weight: 700; padding: 4px 10px; border-radius: 100px; }
+  .badge.SELECTED { background: rgba(0,200,83,0.1); color: #00a843; }
+  .badge.REJECTED { background: rgba(244,67,54,0.1); color: #c62828; }
+  
+  .c-name { font-size: 18px; font-weight: 800; margin-bottom: 4px; padding-right: 70px; }
+  .c-role { font-size: 12px; color: var(--accent); font-weight: 700; text-transform: uppercase; margin-bottom: 16px; }
+  
+  .c-detail { font-size: 13px; color: var(--muted); margin-bottom: 8px; display: flex; justify-content: space-between; border-bottom: 1px solid #f5f8ff; padding-bottom: 8px; }
+  .c-detail strong { color: var(--text); }
+  
+  .score-box { background: #f5f8ff; border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-top: 16px; text-align: center; }
+  .score-box span { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+  .score-box strong { font-family: 'JetBrains Mono'; font-size: 24px; color: var(--accent); }
+  
+  .empty { text-align: center; padding: 50px; color: var(--muted); font-size: 16px; grid-column: 1/-1; background: var(--surface); border-radius: 16px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>🛡️ Wondercraft Staff Dashboard</h1>
+    <button class="btn-refresh" onclick="loadApps()">Refresh Data</button>
+  </div>
+  <div class="grid" id="appGrid"></div>
+</div>
+
+<script>
+  // 🔴🔴🔴 YAHAN APNI MOCKAPI URL DALEIN 🔴🔴🔴
+  const DATABASE_URL = "https://69c299e97518bf8facbee8e2.mockapi.io/applications"; 
+  // 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴
+
+  async function loadApps() {
+    const grid = document.getElementById('appGrid');
+    grid.innerHTML = `<div class="empty">Loading applications... ⏳</div>`;
+
+    if (DATABASE_URL === "YAHAN_MOCKAPI_URL_DALEIN") {
+        grid.innerHTML = `<div class="empty">⚠️ Pehle code me DATABASE_URL daaliye!</div>`;
+        return;
+    }
+
+    try {
+        const response = await fetch(DATABASE_URL);
+        
+        if (!response.ok) {
+             throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const apps = await response.json();
+
+        if(!Array.isArray(apps) || apps.length === 0) {
+            grid.innerHTML = `<div class="empty">Abhi tak kisi ne apply nahi kiya hai. 🥲</div>`;
+            return;
+        }
+
+        // Sabse naye applications pehle dikhane ke liye .reverse()
+        grid.innerHTML = apps.reverse().map(app => `
+            <div class="card ${app.decision}">
+                <div class="badge ${app.decision}">${app.decision}</div>
+                <div class="c-name">${app.name || 'Unknown'}</div>
+                <div class="c-role">${app.position || 'Unknown'}</div>
+                
+                <div class="c-detail"><span>Age:</span> <strong>${app.age || 'N/A'}</strong></div>
+                <div class="c-detail"><span>Discord:</span> <strong>${app.discord || 'N/A'}</strong></div>
+                <div class="c-detail"><span>Experience:</span> <strong>${app.experience || '0'} Yrs</strong></div>
+                <div class="c-detail"><span>Date:</span> <strong>${app.date || 'Unknown Date'}</strong></div>
+                
+                <div class="score-box">
+                    <span>AI Score</span>
+                    <strong>${app.score || '0'} / 100</strong>
+                </div>
+                <div style="font-size:11px; color:#8892b0; margin-top:10px; line-height:1.5;">
+                    <strong>AI Reason:</strong> ${app.reason || 'No reason provided.'}
+                </div>
+            </div>
+        `).join('');
+    } catch(err) {
+        console.error("Fetch error:", err);
+        grid.innerHTML = `<div class="empty" style="color:var(--red)">Database fetch me error aa gaya: ${err.message}. Link check karein! (Link ke end me '/applications' zaroor lagayein)</div>`;
+    }
+  }
+
+  // Load when page opens
+  loadApps();
+</script>
+</body>
+</html>
